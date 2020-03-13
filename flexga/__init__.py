@@ -1,1 +1,1 @@
-from flexga.main import ga  # noqa: F401
+from flexga.main import flexga  # noqa: F401

@@ -207,7 +207,7 @@ class GAPopulation:
         return parents
 
 
-def ga(
+def flexga(
     fun: t.Callable,
     *,
     argsmeta: t.Sequence[ArgMeta] = None,
@@ -218,7 +218,7 @@ def ga(
     verbose: bool = False,
 ) -> t.Tuple[float, t.Sequence, t.Dict[str, t.Any]]:
     """
-    Uses a genetic algorithm to minimize the output of `fun`.
+    Uses a genetic algorithm to maximize the output of `fun`.
 
     Parameters
     ----------
@@ -226,7 +226,7 @@ def ga(
         Should return a single value.
     argsmeta:
         A list of metadata about each positional argument in `fun`'s function
-        signature. Each metadata object should be an instance of `ga.argmeta.ArgMeta`.
+        signature. Each metadata object should be an instance of `flexga.argmeta.ArgMeta`.
     kwargsmeta:
         A mapping of the key-word arg names in `fun`'s function signature to
         metadata about each of those args.

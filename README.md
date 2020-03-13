@@ -12,7 +12,7 @@ cd flexga
 ```
 
 ```python
-from flexga import ga
+from flexga import flexga
 from flexga.utils import inverted
 from flexga.argmeta import FloatArgMeta
 
@@ -24,7 +24,7 @@ def rosenbrock(x: float, y: float) -> float:
 # algorithm maximizes, so we invert the function's output.
 objective = inverted(rosenbrock)
 
-fopt, args_opt, _ = ga(
+fopt, args_opt, _ = flexga(
     objective,
     # We must specify annotations for rosenbrock's arguments,
     # in this case so the optimizer knows what the bounds are
@@ -47,14 +47,14 @@ print(args_opt) # [1.0, 1.0]
 
 ## Annotating Objective Arguments
 
-`ga` can handle objective functions that take positional arguments (as seen above via the `argsmeta` parameter), as well as key-word arguments (via the `kwargsmeta` parameter). It can handle mixed-type arguments of several datatypes, which is one of its best features. The supported data types, alongside their dedicated annotation class, are:
+`flexga` can handle objective functions that take positional arguments (as seen above via the `argsmeta` parameter), as well as key-word arguments (via the `kwargsmeta` parameter). It can handle mixed-type arguments of several datatypes, which is one of its best features. The supported data types, alongside their dedicated annotation class, are:
 
-| Datatype                                                                    | Annotation Class                |
-| --------------------------------------------------------------------------- | ------------------------------- |
-| `float`                                                                     | `ga.argmeta.FloatArgMeta`       |
-| `int`                                                                       | `ga.argmeta.IntArgMeta`         |
-| `numpy.ndarray` vectors (must be 1D)                                        | `ga.argmeta.FloatVectorArgMeta` |
-| `bool`                                                                      | `ga.argmeta.BoolArgMeta`        |
-| Categorical (one of a set of options, where the options can be of any type) | `ga.argmeta.CategoricalArgMeta` |
+| Datatype                                                                    | Annotation Class                    |
+| --------------------------------------------------------------------------- | ----------------------------------- |
+| `float`                                                                     | `flexga.argmeta.FloatArgMeta`       |
+| `int`                                                                       | `flexga.argmeta.IntArgMeta`         |
+| `numpy.ndarray` vectors (must be 1D)                                        | `flexga.argmeta.FloatVectorArgMeta` |
+| `bool`                                                                      | `flexga.argmeta.BoolArgMeta`        |
+| Categorical (one of a set of options, where the options can be of any type) | `flexga.argmeta.CategoricalArgMeta` |
 
-See the constructor definitions for each of these annotation classes inside the `ga.argmeta` module for details on what values they need.
+See the constructor definitions for each of these annotation classes inside the `flexga.argmeta` module for details on what values they need.

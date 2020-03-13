@@ -33,8 +33,8 @@ def shuffle(iterable: t.Sequence) -> t.Sequence:
 def inverted(f: t.Callable) -> t.Callable:
     """
     Creates an inverted version of `f`. Useful if your objective
-    is to minimize `f` but you want to use `ga`, since `ga` tries
-    to maximize the objective.
+    is to minimize `f` but you want to use `flexga`, since
+    `flexga` tries to maximize the objective.
     """
 
     def inverted_f(*args, **kwargs) -> float:
