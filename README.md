@@ -1,5 +1,7 @@
 # A Simple, Multi-Purpose Genetic Algorithm
 
+[![Build Status](https://travis-ci.org/epeters3/ga.svg?branch=master)](https://travis-ci.org/epeters3/ga)
+
 ## Getting Started
 
 ```
