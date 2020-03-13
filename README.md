@@ -45,6 +45,8 @@ print(fopt) # 0.0
 print(args_opt) # [1.0, 1.0]
 ```
 
+## Annotating Objective Arguments
+
 `ga` can handle positional arguments (as seen above via the `argsmeta` parameter), as well as key-word arguments (via the `kwargsmeta` parameter). It can handle mixed-type arguments of several datatypes, which is one of its best features. The supported data types, alongside their dedicated annotation class, are:
 
 | Datatype                                                                    | Annotation Class                |
