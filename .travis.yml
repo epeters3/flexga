@@ -1,3 +1,6 @@
 language: python
+install:
+  - python setup.py install
+  - rm -r flexga
 script:
   - nosetests -s -v

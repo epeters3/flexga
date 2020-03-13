@@ -226,7 +226,8 @@ def flexga(
         Should return a single value.
     argsmeta:
         A list of metadata about each positional argument in `fun`'s function
-        signature. Each metadata object should be an instance of `flexga.argmeta.ArgMeta`.
+        signature. Each metadata object should be an instance of
+        `flexga.argmeta.ArgMeta`.
     kwargsmeta:
         A mapping of the key-word arg names in `fun`'s function signature to
         metadata about each of those args.
