@@ -6,10 +6,13 @@
 
 ## Getting Started
 
+### Installation
+
 ```
-git clone https://github.com/epeters3/flexga.git
-cd flexga
+pip install flexga
 ```
+
+### Basic Usage
 
 ```python
 from flexga import flexga
