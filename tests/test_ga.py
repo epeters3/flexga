@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from ga import ga
-from ga.utils import inverted
-from ga.argmeta import FloatArgMeta, BoolArgMeta
+from flexga import ga
+from flexga.utils import inverted
+from flexga.argmeta import FloatArgMeta, BoolArgMeta
 from tests.utils import rosenbrock, kw_rosenbrock, and_operator
 
 

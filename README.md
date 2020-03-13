@@ -5,14 +5,14 @@
 ## Getting Started
 
 ```
-git clone https://github.com/epeters3/ga.git
-cd ga
+git clone https://github.com/epeters3/flexga.git
+cd flexga
 ```
 
 ```python
-from ga import ga
-from ga.utils import inverted
-from ga.argmeta import FloatArgMeta
+from flexga import ga
+from flexga.utils import inverted
+from flexga.argmeta import FloatArgMeta
 
 def rosenbrock(x: float, y: float) -> float:
     """A classsic continuous optimization problem"""

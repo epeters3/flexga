@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 
-from ga.utils import is_one_of_types, is_two_tuple
+from flexga.utils import is_one_of_types, is_two_tuple
 
 
 class DType(Enum):

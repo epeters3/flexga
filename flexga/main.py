@@ -2,8 +2,8 @@ import typing as t
 import random
 from copy import deepcopy
 
-from ga.argmeta import ArgMeta, RealArgMeta
-from ga.utils import grouper, shuffle
+from flexga.argmeta import ArgMeta, RealArgMeta
+from flexga.utils import grouper, shuffle
 
 
 class Arg:
