@@ -61,3 +61,65 @@ print(args_opt) # [1.0, 1.0]
 | Categorical (one of a set of options, where the options can be of any type) | `flexga.argmeta.CategoricalArgMeta(options)`              |
 
 See the constructor definitions for each of these annotation classes inside the `flexga.argmeta` module for details on what values they need.
+
+## Example: Machine Learning Model Hyperparameter Optimization
+
+Here is an example of using `flexga` to perform hyperparameter optimization of both continuous and integer hyperparameters for a decision tree classifier. `flexga` optimizes the F1 Macro metric as computed over a validation set on the digits problem.
+
+```python
+from sklearn.metrics import f1_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.datasets import load_digits
+from sklearn.model_selection import train_test_split
+from flexga import flexga
+from flexga.argmeta import IntArgMeta, FloatArgMeta
+
+# Make the train/validation split of the data.
+dataset = load_digits()
+X_train, X_val, y_train, y_val = train_test_split(
+    dataset["data"], dataset["target"], test_size=0.33
+)
+
+# We use this model throughout the optimization process.
+model = DecisionTreeClassifier()
+
+# Get a baseline to compare the optimized result to.
+model.fit(X_train, y_train)
+y_pred = model.predict(X_val)
+print(
+    "baseline for default hyperparameters:",
+    f1_score(y_val, y_pred, average="macro")
+)
+
+# This function accepts hyperparameter values, trains
+# the model on the training set with those values,
+# and returns F1 Macro computed over the validation
+# set for the trained model. It is of the form
+# `objective_function(design_variables) -> objective`,
+# which is what the optimizer wants.
+def objective(*args, **kwargs) -> float:
+    # Set the hyperparameters - the things we're optimizing.
+    model.set_params(**kwargs)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_val)
+    return f1_score(y_val, y_pred, average="macro")
+
+
+# Optimize the decision tree's hyperparameters over the
+# validation set. `fopt`, the optimal F1 Macro found,
+# should be higher than the baseline.
+fopt, _, kwargs_opt = flexga(
+    objective,
+    kwargsmeta={
+        # These are the things the genetic algorithm will optimize;
+        # the decision tree's hyperparameters.
+        "min_samples_split": IntArgMeta((2, 75), 3),
+        "min_samples_leaf": IntArgMeta((1, 75), 3),
+        "min_weight_fraction_leaf": FloatArgMeta((0.0, 0.5), 0.025),
+        "min_impurity_decrease": FloatArgMeta((0.0, 1.0), 0.05),
+        "ccp_alpha": FloatArgMeta((0.0, 1.0), 0.05),
+    },
+    iters=50,
+    verbose=True,
+)
+```
