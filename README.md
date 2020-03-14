@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/epeters3/flexga.svg?branch=master)](https://travis-ci.org/epeters3/flexga)
 
-`flexga` is a flexible, multi-purpose elitist genetic algorithm that can simultaneously support float, integer, categorical, boolean, and float vector arguments.
+`flexga` is a flexible, multi-purpose elitist genetic algorithm useful for single objective optimization problems. It can simultaneously support float, integer, categorical, boolean, and float vector arguments. As such, it is a versatile tool for hyperparemter optimization in machine learning models, among other things.
 
 ## Getting Started
 
@@ -50,14 +50,14 @@ print(args_opt) # [1.0, 1.0]
 
 ## Annotating Objective Arguments
 
-`flexga` can handle objective functions that take positional arguments (as seen above via the `argsmeta` parameter), as well as key-word arguments (via the `kwargsmeta` parameter). It can handle mixed-type arguments of several datatypes, which is one of its best features. The supported data types, alongside their dedicated annotation class, are:
+`flexga` can handle objective functions that take positional arguments (as seen above via the `argsmeta` parameter), as well as key-word arguments (via the `kwargsmeta` parameter, as seen below in the machine learning model hyperparameter optimization example). It can handle mixed-type arguments of several datatypes, which is one of its best features. The supported data types, alongside their dedicated annotation classes, are:
 
-| Datatype                                                                    | Annotation Class                    |
-| --------------------------------------------------------------------------- | ----------------------------------- |
-| `float`                                                                     | `flexga.argmeta.FloatArgMeta`       |
-| `int`                                                                       | `flexga.argmeta.IntArgMeta`         |
-| `numpy.ndarray` vectors (must be 1D)                                        | `flexga.argmeta.FloatVectorArgMeta` |
-| `bool`                                                                      | `flexga.argmeta.BoolArgMeta`        |
-| Categorical (one of a set of options, where the options can be of any type) | `flexga.argmeta.CategoricalArgMeta` |
+| Datatype                                                                    | Annotation Class                                          |
+| --------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `float`                                                                     | `flexga.argmeta.FloatArgMeta(bounds, mutation_std)`       |
+| `int`                                                                       | `flexga.argmeta.IntArgMeta(bounds, mutation_std)`         |
+| `numpy.ndarray` vectors (must be 1D)                                        | `flexga.argmeta.FloatVectorArgMeta(bounds, mutation_std)` |
+| `bool`                                                                      | `flexga.argmeta.BoolArgMeta()`                            |
+| Categorical (one of a set of options, where the options can be of any type) | `flexga.argmeta.CategoricalArgMeta(options)`              |
 
 See the constructor definitions for each of these annotation classes inside the `flexga.argmeta` module for details on what values they need.
