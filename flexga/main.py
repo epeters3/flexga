@@ -214,6 +214,7 @@ def flexga(
     kwargsmeta: t.Dict[str, ArgMeta] = None,
     iters: t.Optional[int] = None,
     patience: t.Optional[int] = 20,
+    patience_tolerance: float = 0.0,
     population_size: int = None,
     mutation_prob: float = 0.02,
     print_every: t.Optional[int] = None,
@@ -236,8 +237,10 @@ def flexga(
         If supplied, the maximum number of optimization iterations (i.e. generations)
         will not exceed `iters`.
     patience:
-        If supplied, and the current best optimum is not improved upon for `patience`
-        generations, the optimizer will exit.
+        If supplied, and the current best optimum is not improved upon by at least
+        `patience_tolerance` for `patience` generations, the optimizer will exit.
+    patience_tolerance:
+        See `patience`.
     population_size:
         The size of the population to maintain. If `None`, an order of magnitude
         larger than the number of arguments `fun` takes will be used. Note that
@@ -296,8 +299,8 @@ def flexga(
         previous_best = population.best_fitness
         # Compute objective for each genome in population
         population.evaluate_fitness(fun)
-        if population.best_fitness > previous_best:
-            # The population best has improved this generation.
+        if population.best_fitness - previous_best > patience_tolerance:
+            # The population best has improved this generation by a sufficient amount.
             no_improvement_gens = 0
         else:
             # There was no improvement for this generation
