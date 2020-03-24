@@ -12,6 +12,7 @@ class TestFlexGA(TestCase):
             inverted(rosenbrock),
             argsmeta=[FloatArgMeta((-50, 50), 1.0), FloatArgMeta((-50, 50), 1.0)],
             iters=1000,
+            patience=None,
         )
         # With 1000 iterations, we should easily be within
         # .01 of the true optimum.
@@ -32,6 +33,6 @@ class TestFlexGA(TestCase):
 
     def test_doesnt_error_on_discrete(self) -> None:
         fopt, _, _ = flexga(
-            and_operator, argsmeta=[BoolArgMeta(), BoolArgMeta()], iters=10,
+            and_operator, argsmeta=[BoolArgMeta(), BoolArgMeta()], patience=10,
         )
         assert fopt == 1

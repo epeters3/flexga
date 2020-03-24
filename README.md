@@ -119,7 +119,9 @@ fopt, _, kwargs_opt = flexga(
         "min_impurity_decrease": FloatArgMeta((0.0, 1.0), 0.05),
         "ccp_alpha": FloatArgMeta((0.0, 1.0), 0.05),
     },
-    iters=50,
+    # Will stop when the optimizer has not improved upon the best
+    # fitness for 20 generations.
+    patience=20,
     verbose=True,
 )
 ```

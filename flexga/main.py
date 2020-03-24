@@ -151,13 +151,13 @@ class GAPopulation:
             self.members = Genome.sample_n(self.argsmeta, self.kwargsmeta, self.size)
         else:
             self.members = []
-        self.best_fitness: float = None  # type: ignore
+        self.best_fitness = -float("inf")
         self.best_genome: Genome = None  # type: ignore
 
     def evaluate_fitness(self, objective: t.Callable) -> None:
         for genome in self.members:
             genome.evaluate_fitness(objective)
-            if self.best_fitness is None or genome.fitness > self.best_fitness:
+            if genome.fitness > self.best_fitness:
                 # We've found a new best
                 self.best_fitness = genome.fitness
                 self.best_genome = genome
@@ -212,7 +212,8 @@ def flexga(
     *,
     argsmeta: t.Sequence[ArgMeta] = None,
     kwargsmeta: t.Dict[str, ArgMeta] = None,
-    iters: int,
+    iters: t.Optional[int] = None,
+    patience: t.Optional[int] = 20,
     population_size: int = None,
     mutation_prob: float = 0.02,
     verbose: bool = False,
@@ -232,7 +233,11 @@ def flexga(
         A mapping of the key-word arg names in `fun`'s function signature to
         metadata about each of those args.
     iters:
-        The number of optimization iterations (i.e. generations) to complete.
+        If supplied, the maximum number of optimization iterations (i.e. generations)
+        will not exceed `iters`.
+    patience:
+        If supplied, and the current best optimum is not improved upon for `patience`
+        generations, the optimizer will exit.
     population_size:
         The size of the population to maintain. If `None`, an order of magnitude
         larger than the number of arguments `fun` takes will be used. Note that
@@ -252,12 +257,19 @@ def flexga(
     kwargs_opt:
         The key-word arguments given to `fun` that yielded `fopt`.
     """
+    # Validate inputs
     if argsmeta is None and kwargsmeta is None:
         raise ValueError(
             "no annotations provided for `fun`'s arguments: must populate "
             "`argsmeta` and/or `kwargsmeta`, depending on your `fun`'s "
             "function signature."
         )
+    if patience is None and iters is None:
+        raise ValueError(
+            "must supply a value for either the `patience` or `iters` argument."
+        )
+
+    # Provide default values
     if argsmeta is None:
         argsmeta = []
     if kwargsmeta is None:
@@ -265,22 +277,50 @@ def flexga(
     if population_size is None:
         population_size = (len(argsmeta) + len(kwargsmeta)) * 10
 
+    # Initizlize
+    no_improvement_gens = 0
+    iters_done = 0
     population = GAPopulation(argsmeta, kwargsmeta, population_size, True)
-    for i in range(iters):
+
+    # The optimization loop
+    while True:
+
+        if iters is not None and iters_done >= iters:
+            # We've reached the maximum number of iterations.
+            break
+
+        if patience is not None and no_improvement_gens >= patience:
+            # No improvement for `patience` generations; stop the optimization.
+            break
+
+        previous_best = population.best_fitness
         # Compute objective for each genome in population
         population.evaluate_fitness(fun)
-        if verbose:
-            print(f"iter {i+1} => fopt: {population.best_fitness:6.6f}")
+        if population.best_fitness > previous_best:
+            # The population best has improved this generation.
+            no_improvement_gens = 0
+        else:
+            # There was no improvement for this generation
+            no_improvement_gens += 1
+
         # Choose points from population for the mating pool
         parent_pairs = population.do_selection()
+
         # Create a new population from the mating pool
         population = population.crossover(parent_pairs)
+
         # Randomly mutate some genomes in the population
         population.mutate(mutation_prob)
+
+        iters_done += 1
+        if verbose:
+            print(f"iter {iters_done} => fopt: {population.best_fitness:6.6f}")
+
     # Return "optimum" (best result found), and the arguments to `fun`
     # used to find it.
     args_opt, kwargs_opt = population.best_genome.get_arg_vals()
     if verbose:
         print("fopt:", population.best_fitness)
         print("optimal args:", args_opt, kwargs_opt)
+
     return population.best_fitness, args_opt, kwargs_opt

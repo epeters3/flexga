@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="flexga",
-    version="0.1.0",
+    version="0.2.0",
     packages=find_packages(include=["flexga", "flexga.*"]),
     license="MIT",
     url="https://github.com/epeters3/flexga",
