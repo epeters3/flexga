@@ -216,7 +216,7 @@ def flexga(
     patience: t.Optional[int] = 20,
     population_size: int = None,
     mutation_prob: float = 0.02,
-    verbose: bool = False,
+    print_every: t.Optional[int] = None,
 ) -> t.Tuple[float, t.Sequence, t.Dict[str, t.Any]]:
     """
     Uses a genetic algorithm to maximize the output of `fun`.
@@ -245,8 +245,8 @@ def flexga(
         be supplied manually.
     mutation_prob:
         The probability with which to mutate genes in new child genomes.
-    verbose:
-        Whether to print a status message each iteration.
+    print_every:
+        If supplied, a status message will be printed every `print_every` generations.
     
     Returns
     -------
@@ -313,13 +313,13 @@ def flexga(
         population.mutate(mutation_prob)
 
         iters_done += 1
-        if verbose:
+        if print_every is not None and iters_done % print_every == 0:
             print(f"iter {iters_done} => fopt: {population.best_fitness:6.6f}")
 
     # Return "optimum" (best result found), and the arguments to `fun`
     # used to find it.
     args_opt, kwargs_opt = population.best_genome.get_arg_vals()
-    if verbose:
+    if print_every is not None:
         print("fopt:", population.best_fitness)
         print("optimal args:", args_opt, kwargs_opt)
 

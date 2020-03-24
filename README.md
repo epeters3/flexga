@@ -122,6 +122,6 @@ fopt, _, kwargs_opt = flexga(
     # Will stop when the optimizer has not improved upon the best
     # fitness for 20 generations.
     patience=20,
-    verbose=True,
+    print_every=5,
 )
 ```
