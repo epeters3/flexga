@@ -36,3 +36,13 @@ class TestFlexGA(TestCase):
             and_operator, argsmeta=[BoolArgMeta(), BoolArgMeta()], patience=10,
         )
         assert fopt == 1
+
+    def test_can_use_callback(self) -> None:
+        fopt, _, _ = flexga(
+            inverted(rosenbrock),
+            argsmeta=[FloatArgMeta((-50, 50), 1.0), FloatArgMeta((-50, 50), 1.0)],
+            iters=1000,
+            patience=None,
+            # End prematurely after 10 iterations.
+            callback=lambda state: True if state["nit"] >= 10 else False,
+        )

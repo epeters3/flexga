@@ -218,6 +218,7 @@ def flexga(
     population_size: int = None,
     mutation_prob: float = 0.02,
     print_every: t.Optional[int] = None,
+    callback: t.Callable = None,
 ) -> t.Tuple[float, t.Sequence, t.Dict[str, t.Any]]:
     """
     Uses a genetic algorithm to maximize the output of `fun`.
@@ -250,6 +251,17 @@ def flexga(
         The probability with which to mutate genes in new child genomes.
     print_every:
         If supplied, a status message will be printed every `print_every` generations.
+    callback:
+        An optional callback function that will be called after every generation. The
+        function signature should be `callback(state: dict) -> bool`, where `state` is
+        a dictionary containing data about the current state of the optimizer, namely
+        these fields:
+            - "fopt": The optimal output for `fun` found by the optimizer so far
+            - "args_opt": The positional arguments given to `fun` that yielded `fopt`
+            - "kwargs_opt": The key-word arguments given to `fun` that yielded `fopt`
+            - "nit": The number of generations/iterations completed so far.
+        
+        . If `callback` returns `True`, the optimization will end prematurely.
     
     Returns
     -------
@@ -287,6 +299,7 @@ def flexga(
 
     # The optimization loop
     while True:
+        # Begin a new generation
 
         if iters is not None and iters_done >= iters:
             # We've reached the maximum number of iterations.
@@ -318,6 +331,20 @@ def flexga(
         iters_done += 1
         if print_every is not None and iters_done % print_every == 0:
             print(f"iter {iters_done} => fopt: {population.best_fitness:6.6f}")
+
+        if callback is not None:
+            args_opt, kwargs_opt = population.best_genome.get_arg_vals()
+            end_prematurely = callback(
+                {
+                    "args_opt": args_opt,
+                    "kwargs_opt": kwargs_opt,
+                    "nit": iters_done,
+                    "fun": population.best_fitness,
+                }
+            )
+            if end_prematurely:
+                # The user has requested via callback to end the optimization.
+                break
 
     # Return "optimum" (best result found), and the arguments to `fun`
     # used to find it.
