@@ -64,11 +64,6 @@ class RealArgMeta(ArgMeta):
 
 class CategoricalArgMeta(ArgMeta):
     def __init__(self, options: t.Iterable[t.Any]) -> None:
-        if not isinstance(options, list):
-            raise ValueError(
-                "categorical args must supply a list of values "
-                "the arg can take on as the `options`."
-            )
         self.options = set(options)
 
     def mutate(self, x: t.Any) -> t.Any:
