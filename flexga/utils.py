@@ -1,4 +1,5 @@
 import typing as t
+import signal
 from itertools import zip_longest
 import random
 
@@ -41,3 +42,39 @@ def inverted(f: t.Callable) -> t.Callable:
         return -f(*args, **kwargs)
 
     return inverted_f
+
+
+class EvaluationTimeoutError(Exception):
+    pass
+
+
+class conditional_timeout:
+    """
+    Can be used to exit a function if it's taking too long. E.g.
+    for a function `foo`, this can be done:
+
+    ```
+    # Will raise `EvaluationTimeoutError` if `foo` takes longer than 5 seconds.
+    with conditional_timeout(5):
+        foo()
+    ```
+    """
+
+    def __init__(
+        self, seconds=1, should_timeout: bool = True, error_message="Timeout"
+    ) -> None:
+        self.seconds = seconds
+        self.should_timeout = should_timeout
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame) -> None:
+        raise EvaluationTimeoutError(self.error_message)
+
+    def __enter__(self) -> None:
+        if self.should_timeout:
+            signal.signal(signal.SIGALRM, self.handle_timeout)
+            signal.alarm(self.seconds)
+
+    def __exit__(self, type, value, traceback) -> None:
+        if self.should_timeout:
+            signal.alarm(0)

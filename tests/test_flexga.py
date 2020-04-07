@@ -1,4 +1,5 @@
 from unittest import TestCase
+from time import time
 
 from flexga import flexga
 from flexga.utils import inverted
@@ -46,3 +47,27 @@ class TestFlexGA(TestCase):
             # End prematurely after 10 iterations.
             callback=lambda state: True if state["nit"] >= 10 else False,
         )
+
+    def test_timeout_successfully(self) -> None:
+        self.total_iters = 0
+
+        def get_iters(state) -> bool:
+            self.total_iters = state["nit"]
+            return False
+
+        start = time()
+        fopt, _, _ = flexga(
+            inverted(rosenbrock),
+            argsmeta=[FloatArgMeta((-50, 50), 1.0), FloatArgMeta((-50, 50), 1.0)],
+            # Should take much longer than 1 second
+            iters=int(1e10),
+            patience=None,
+            # End prematurely after 10 iterations
+            time=1,
+            callback=get_iters,
+        )
+        end = time() - start
+        # Timeout was 1 so should be long done at 2
+        assert end < 2
+        assert self.total_iters > 0 and self.total_iters < 1e10
+        assert fopt > -float("inf")

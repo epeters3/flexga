@@ -3,7 +3,7 @@ import random
 from copy import deepcopy
 
 from flexga.argmeta import ArgMeta, RealArgMeta
-from flexga.utils import grouper, shuffle
+from flexga.utils import grouper, shuffle, conditional_timeout, EvaluationTimeoutError
 
 
 class Arg:
@@ -213,6 +213,7 @@ def flexga(
     argsmeta: t.Sequence[ArgMeta] = None,
     kwargsmeta: t.Dict[str, ArgMeta] = None,
     iters: t.Optional[int] = None,
+    time: t.Optional[int] = None,
     patience: t.Optional[int] = 20,
     patience_tolerance: float = 0.0,
     population_size: int = None,
@@ -237,6 +238,9 @@ def flexga(
     iters:
         If supplied, the maximum number of optimization iterations (i.e. generations)
         will not exceed `iters`.
+    time:
+        If supplied, optimization will quit after `time` seconds, returning the best
+        solution it could find in that time.
     patience:
         If supplied, and the current best optimum is not improved upon by at least
         `patience_tolerance` for `patience` generations, the optimizer will exit.
@@ -293,63 +297,71 @@ def flexga(
         population_size = (len(argsmeta) + len(kwargsmeta)) * 10
 
     # Initizlize
+    verbose = print_every is not None
     no_improvement_gens = 0
     iters_done = 0
     population = GAPopulation(argsmeta, kwargsmeta, population_size, True)
 
-    # The optimization loop
-    while True:
-        # Begin a new generation
+    try:
+        with conditional_timeout(time, should_timeout=time is not None):
 
-        if iters is not None and iters_done >= iters:
-            # We've reached the maximum number of iterations.
-            break
+            # The optimization loop
+            while True:
+                # Begin a new generation
 
-        if patience is not None and no_improvement_gens >= patience:
-            # No improvement for `patience` generations; stop the optimization.
-            break
+                if iters is not None and iters_done >= iters:
+                    # We've reached the maximum number of iterations.
+                    break
 
-        previous_best = population.best_fitness
-        # Compute objective for each genome in population
-        population.evaluate_fitness(fun)
-        if population.best_fitness - previous_best > patience_tolerance:
-            # The population best has improved this generation by a sufficient amount.
-            no_improvement_gens = 0
-        else:
-            # There was no improvement for this generation
-            no_improvement_gens += 1
+                if patience is not None and no_improvement_gens >= patience:
+                    # No improvement for `patience` generations; stop the optimization.
+                    break
 
-        # Choose points from population for the mating pool
-        parent_pairs = population.do_selection()
+                previous_best = population.best_fitness
+                # Compute objective for each genome in population
+                population.evaluate_fitness(fun)
+                if population.best_fitness - previous_best > patience_tolerance:
+                    # The population best has improved this generation by a sufficient
+                    # amount.
+                    no_improvement_gens = 0
+                else:
+                    # There was no improvement for this generation
+                    no_improvement_gens += 1
 
-        # Create a new population from the mating pool
-        population = population.crossover(parent_pairs)
+                # Choose points from population for the mating pool
+                parent_pairs = population.do_selection()
 
-        # Randomly mutate some genomes in the population
-        population.mutate(mutation_prob)
+                # Create a new population from the mating pool
+                population = population.crossover(parent_pairs)
 
-        iters_done += 1
-        if print_every is not None and iters_done % print_every == 0:
-            print(f"iter {iters_done} => fopt: {population.best_fitness:6.6f}")
+                # Randomly mutate some genomes in the population
+                population.mutate(mutation_prob)
 
-        if callback is not None:
-            args_opt, kwargs_opt = population.best_genome.get_arg_vals()
-            end_prematurely = callback(
-                {
-                    "args_opt": args_opt,
-                    "kwargs_opt": kwargs_opt,
-                    "nit": iters_done,
-                    "fun": population.best_fitness,
-                }
-            )
-            if end_prematurely:
-                # The user has requested via callback to end the optimization.
-                break
+                iters_done += 1
+                if verbose and iters_done % print_every == 0:  # type: ignore
+                    print(f"iter {iters_done} => fopt: {population.best_fitness:6.6f}")
+
+                if callback is not None:
+                    args_opt, kwargs_opt = population.best_genome.get_arg_vals()
+                    end_prematurely = callback(
+                        {
+                            "args_opt": args_opt,
+                            "kwargs_opt": kwargs_opt,
+                            "nit": iters_done,
+                            "fun": population.best_fitness,
+                        }
+                    )
+                    if end_prematurely:
+                        # The user has requested via callback to end the optimization.
+                        break
+    except EvaluationTimeoutError:
+        if verbose:
+            print("maximum time reached.")
 
     # Return "optimum" (best result found), and the arguments to `fun`
     # used to find it.
     args_opt, kwargs_opt = population.best_genome.get_arg_vals()
-    if print_every is not None:
+    if verbose:
         print("fopt:", population.best_fitness)
         print("optimal args:", args_opt, kwargs_opt)
 
