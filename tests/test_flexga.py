@@ -27,6 +27,7 @@ class TestFlexGA(TestCase):
                 "y": FloatArgMeta((-50, 50), 1.0),
             },
             iters=1000,
+            patience=None,
         )
         # With 1000 iterations, we should easily be within
         # .01 of the true optimum.
