@@ -154,13 +154,32 @@ class GAPopulation:
         self.best_fitness = -float("inf")
         self.best_genome: Genome = None  # type: ignore
 
-    def evaluate_fitness(self, objective: t.Callable) -> None:
+    def evaluate_fitness(
+        self, objective: t.Callable, callback: t.Optional[t.Callable], gen_num: int
+    ) -> bool:
         for genome in self.members:
+
             genome.evaluate_fitness(objective)
             if genome.fitness > self.best_fitness:
                 # We've found a new best
                 self.best_fitness = genome.fitness
                 self.best_genome = genome
+
+            if callback is not None:
+                args_opt, kwargs_opt = self.best_genome.get_arg_vals()
+                end_prematurely = callback(
+                    {
+                        "args_opt": args_opt,
+                        "kwargs_opt": kwargs_opt,
+                        "nit": gen_num,
+                        "fun": self.best_fitness,
+                    }
+                )
+                if end_prematurely:
+                    # User has requested to exit the optimization early.
+                    return True
+
+        return False
 
     def do_selection(self) -> t.Iterable[t.Tuple[int, int]]:
         """
@@ -256,14 +275,14 @@ def flexga(
     print_every:
         If supplied, a status message will be printed every `print_every` generations.
     callback:
-        An optional callback function that will be called after every generation. The
-        function signature should be `callback(state: dict) -> bool`, where `state` is
-        a dictionary containing data about the current state of the optimizer, namely
-        these fields:
+        An optional callback function that will be called after every objective function
+        evaluation. The function signature should be `callback(state: dict) -> bool`,
+        where `state` is a dictionary containing data about the current state of the
+        optimizer, namely these fields:
             - "fopt": The optimal output for `fun` found by the optimizer so far
             - "args_opt": The positional arguments given to `fun` that yielded `fopt`
             - "kwargs_opt": The key-word arguments given to `fun` that yielded `fopt`
-            - "nit": The number of generations/iterations completed so far.
+            - "nit": The number of generations completed so far.
         
         . If `callback` returns `True`, the optimization will end prematurely.
     
@@ -299,7 +318,7 @@ def flexga(
     # Initizlize
     verbose = print_every is not None
     no_improvement_gens = 0
-    iters_done = 0
+    i = 1
     population = GAPopulation(argsmeta, kwargsmeta, population_size, True)
 
     try:
@@ -308,18 +327,12 @@ def flexga(
             # The optimization loop
             while True:
                 # Begin a new generation
-
-                if iters is not None and iters_done >= iters:
-                    # We've reached the maximum number of iterations.
-                    break
-
-                if patience is not None and no_improvement_gens >= patience:
-                    # No improvement for `patience` generations; stop the optimization.
-                    break
-
                 previous_best = population.best_fitness
+
                 # Compute objective for each genome in population
-                population.evaluate_fitness(fun)
+                end_prematurely = population.evaluate_fitness(fun, callback, i)
+                if end_prematurely:
+                    break
                 if population.best_fitness - previous_best > patience_tolerance:
                     # The population best has improved this generation by a sufficient
                     # amount.
@@ -337,23 +350,19 @@ def flexga(
                 # Randomly mutate some genomes in the population
                 population.mutate(mutation_prob)
 
-                iters_done += 1
-                if verbose and iters_done % print_every == 0:  # type: ignore
-                    print(f"iter {iters_done} => fopt: {population.best_fitness:6.6f}")
+                if verbose and i % print_every == 0:  # type: ignore
+                    print(f"iter {i} => fopt: {population.best_fitness:6.6f}")
 
-                if callback is not None:
-                    args_opt, kwargs_opt = population.best_genome.get_arg_vals()
-                    end_prematurely = callback(
-                        {
-                            "args_opt": args_opt,
-                            "kwargs_opt": kwargs_opt,
-                            "nit": iters_done,
-                            "fun": population.best_fitness,
-                        }
-                    )
-                    if end_prematurely:
-                        # The user has requested via callback to end the optimization.
-                        break
+                if iters is not None and i >= iters:
+                    # We've reached the maximum number of iterations.
+                    break
+
+                if patience is not None and no_improvement_gens >= patience:
+                    # No improvement for `patience` generations; stop the optimization.
+                    break
+
+                i += 1
+
     except EvaluationTimeoutError:
         if verbose:
             print("maximum time reached.")
