@@ -63,7 +63,7 @@ class TestFlexGA(TestCase):
             # Should take much longer than 1 second
             iters=int(1e10),
             patience=None,
-            # End prematurely after 10 iterations
+            # End prematurely after 1 second
             time=1,
             callback=get_iters,
         )
